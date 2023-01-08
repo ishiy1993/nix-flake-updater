@@ -1,9 +1,8 @@
 # nix-flake-updater
+A reusable workflow for updating flake.lock
 
 ## Note
-If you need action, use:
-
-- https://github.com/DeterminateSystems/update-flake-lock
+If you need a custom action, use [DeterminateSystems/update-flake-lock](https://github.com/DeterminateSystems/update-flake-lock).
 
 ## Usage
 Minimum example:
@@ -30,12 +29,12 @@ jobs:
       timezone: JST-9
 ```
 
-## What to do in nix-flake-updater
+## What nix-flake-updater does
 
-1. checkout by [actions/checkout](https://github.com/actions/checkout)
-2. install nix by [cachix/install-nix-action](https://github.com/cachix/install-nix-action)
-3. `nix flake update`
-4. create a PR by [gh pr create](https://cli.github.com/manual/gh_pr_create)
+1. checkout by [actions/checkout](https://github.com/actions/checkout).
+2. install nix by [cachix/install-nix-action](https://github.com/cachix/install-nix-action).
+3. `nix flake update --commit-lock-file`.
+4. create a PR by [gh pr create](https://cli.github.com/manual/gh_pr_create).
 
+**If there are no updates, no PR will be created.**
 The commit and PR author is `github-actions[bot]`.
-If there are no updates, no PR will be created.
