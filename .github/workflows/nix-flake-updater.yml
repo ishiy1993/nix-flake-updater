@@ -1,0 +1,75 @@
+name: nix-flake-updater
+
+on:
+  workflow_call:
+    inputs:
+      base_branch:
+        type: string
+        required: true
+      pr_branch_prefix:
+        type: string
+        required: false
+        default: ''
+      pr_title:
+        type: string
+        required: false
+        default: 'Update flake.lock'
+      reviewer:
+        type: string
+        required: false
+        default: ''
+      timezone:
+        type: string
+        required: false
+        default: 'UTC'
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BODY_FILE: log
+
+jobs:
+  update:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.base_branch }}
+      - uses: cachix/install-nix-action@v18
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Setup
+        run: |
+          date
+          echo "BRANCH=${{ inputs.pr_branch_prefix }}update-nix-flake-$(date +'%Y-%m-%d')" >> "$GITHUB_ENV"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+        env:
+          TZ: ${{ inputs.timezone }}
+      - name: Create PR Body
+        run: |
+          { echo "by **$(nix --version)** and [nix-flake-updater](https://github.com/ishiy1993/nix-flake-updater) in [${{ github.workflow }} #${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})."; echo "<details>"; echo "  <summary>log</summary>"; echo ""; echo '```'; } >> ${{ env.BODY_FILE }}
+      - name: Update flake.lock
+        run: |
+          git switch -c "$BRANCH"
+          nix flake update --commit-lock-file --commit-lockfile-summary 'Update flake.lock by nix-flake-updater workflow' 2>&1 | tee -a ${{ env.BODY_FILE }}
+          { echo '```'; echo "</details>"; } >> ${{ env.BODY_FILE }}
+      - name: Create PR
+        run: |
+          if [ "$(git diff --exit-code ${{ inputs.base_branch }} ${{ env.BRANCH }})" ]; then
+            git push origin "$BRANCH"
+            if [ "${{ inputs.reviewer }}" = "" ]; then
+              gh pr create --base "${{ inputs.base_branch }}" --head "${{ env.BRANCH }}" --title "${{ inputs.pr_title }}" --body "$(cat ${{ env.BODY_FILE }})" | tee pr
+              echo "::notice title=Result::Created a PR without reviewers! $(cat pr)"
+            else
+              gh pr create --base "${{ inputs.base_branch }}" --head "${{ env.BRANCH }}" --title "${{ inputs.pr_title }}" --body "$(cat ${{ env.BODY_FILE }})" --reviewer "${{ inputs.reviewer }}" | tee pr
+              echo "::notice title=Result::Created a PR and assigned a reviewer! $(cat pr)"
+            fi
+          else
+            echo "::notice title=Result::No updates."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
