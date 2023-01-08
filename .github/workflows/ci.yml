@@ -1,0 +1,21 @@
+name: ci
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'flake.nix'
+      - 'flake.lock'
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v18
+      - name: Lint
+        run: |
+          nix develop -c actionlint -color
