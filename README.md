@@ -10,7 +10,7 @@ Minimum example:
 ```yaml
 jobs:
   call-nix-flake-updater:
-    uses: ishiy1993/nix-flake-updater/.github/workflows/nix-flake-updater.yml@v0
+    uses: ishiy1993/nix-flake-updater/.github/workflows/nix-flake-updater.yml@v1
     with:
       base_branch: main
 ```
@@ -20,7 +20,7 @@ Other options:
 ```yaml
 jobs:
   call-nix-flake-updater:
-    uses: ishiy1993/nix-flake-updater/.github/workflows/nix-flake-updater.yml@v0
+    uses: ishiy1993/nix-flake-updater/.github/workflows/nix-flake-updater.yml@v1
     with:
       base_branch: main
       pr_branch_prefix: 'bot/'
